@@ -1,18 +1,17 @@
 import * as THREE from "three";
-import type { Artwork } from "../../../shared/types";
-export function artTexture(a: Artwork): THREE.CanvasTexture {
+export function artTexture(artworkId: string): THREE.CanvasTexture {
   const c = document.createElement("canvas");
   c.width = 700;
   c.height = 850;
   const g = c.getContext("2d")!;
   g.fillStyle = "#e3dfd4";
   g.fillRect(0, 0, 700, 850);
-  let seed = Number(a.id.slice(1)) * 7919;
+  let seed = Number(artworkId.slice(1)) * 7919;
   const rnd = () => {
     seed = (seed * 16807) % 2147483647;
     return seed / 2147483647;
   };
-  if (a.id === "a1") {
+  if (artworkId === "a1") {
     for (let n = 0; n < 11; n++) {
       g.beginPath();
       g.moveTo(0, 850);
@@ -32,7 +31,7 @@ export function artTexture(a: Artwork): THREE.CanvasTexture {
       ][n % 6];
       g.fill();
     }
-  } else if (a.id === "a2") {
+  } else if (artworkId === "a2") {
     g.fillStyle = "#b6b0c6";
     g.fillRect(0, 0, 700, 850);
     for (let n = 0; n < 100; n++) {
@@ -44,14 +43,14 @@ export function artTexture(a: Artwork): THREE.CanvasTexture {
       g.strokeStyle = `rgba(244,236,255,${0.1 + rnd() * 0.5})`;
       g.stroke();
     }
-  } else if (a.id === "a3") {
+  } else if (artworkId === "a3") {
     g.fillStyle = "#e2c4a5";
     g.fillRect(0, 0, 700, 850);
     for (let n = 0; n < 18; n++) {
       g.fillStyle = ["#c66d45", "#edab70", "#8b4939", "#e6ce9f"][n % 4];
       g.fillRect(rnd() * 650, rnd() * 800, 30 + rnd() * 230, 40 + rnd() * 330);
     }
-  } else if (a.id === "a4") {
+  } else if (artworkId === "a4") {
     g.fillStyle = "#a2bac0";
     g.fillRect(0, 0, 700, 850);
     for (let n = 0; n < 100; n++) {
@@ -62,7 +61,7 @@ export function artTexture(a: Artwork): THREE.CanvasTexture {
       g.strokeStyle = "#c2dddd";
       g.strokeRect(x, y, 20, 65);
     }
-  } else if (a.id === "a5") {
+  } else if (artworkId === "a5") {
     g.fillStyle = "#18261f";
     g.fillRect(0, 0, 700, 850);
     for (let n = 0; n < 3500; n++) {

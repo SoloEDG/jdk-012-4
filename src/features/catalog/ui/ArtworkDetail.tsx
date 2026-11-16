@@ -1,20 +1,28 @@
-import { Heart, Headphones, ArrowUpRight } from "lucide-react";
-import { artworkById } from "../../../shared/catalog";
+import { Heart, Headphones, ArrowUpRight, MapPin } from "lucide-react";
+import {
+  artworkById,
+  hallById,
+  placementById,
+  placementsByArtwork,
+} from "../../../shared/catalog";
 export function ArtworkDetail({
-  id,
+  placementId,
   saved,
   onFavorite,
   onListen,
   onGo,
 }: {
-  id: string | null;
+  placementId: string | null;
   saved: boolean;
   onFavorite: () => void;
   onListen: () => void;
   onGo: () => void;
 }) {
-  const a = artworkById(id);
-  if (!a) return <div>靠近一件作品，开始探索。</div>;
+  const placement = placementById(placementId);
+  const a = artworkById(placement?.artworkId ?? null);
+  if (!a || !placement) return <div>靠近一件作品，开始探索。</div>;
+  const hall = hallById(placement.hallId);
+  const siblings = placementsByArtwork(a.id).filter((p) => p.id !== placement.id);
   return (
     <section className="detail">
       <div className="eyebrow">
@@ -22,6 +30,9 @@ export function ArtworkDetail({
       </div>
       <div className={"art-preview art-" + a.id}>
         <span>{a.en}</span>
+        <em className="placement-badge">
+          {hall?.name} · {placement.label}
+        </em>
       </div>
       <div className="detail-heading">
         <h2>{a.title}</h2>
@@ -37,7 +48,20 @@ export function ArtworkDetail({
         {a.artist} <span>/</span> {a.year}
       </p>
       <p className="medium">{a.medium}</p>
+      <p className="placement-line">
+        <MapPin size={12} />
+        当前陈列 · {hall?.floorLabel} {hall?.name} · {placement.label}
+      </p>
       <p className="description">{a.description}</p>
+      {siblings.length > 0 && (
+        <p className="sibling-note">
+          同一件作品还陈列于：
+          {siblings
+            .map((s) => `${hallById(s.hallId)?.name}（${s.label}）`)
+            .join("、")}
+          。讲解与收藏属于作品本身。
+        </p>
+      )}
       <div className="detail-actions">
         <button className="primary" onClick={onListen}>
           <Headphones size={16} />

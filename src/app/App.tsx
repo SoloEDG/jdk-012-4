@@ -15,7 +15,13 @@ import { ArtworkList, ArtworkDetail } from "../features/catalog";
 import { TourPanel } from "../features/tours";
 import { AudioPlayer } from "../features/narration";
 import { CollectionPanel } from "../features/collection";
-import { artworks, artworkById } from "../shared/catalog";
+import {
+  artworks,
+  artworkById,
+  hallById,
+  halls,
+  placementById,
+} from "../shared/catalog";
 import { useGallery } from "./useGallery";
 export default function App() {
   const g = useGallery();
@@ -23,7 +29,11 @@ export default function App() {
   const [mapOpen, setMapOpen] = useState(false);
   const [help, setHelp] = useState(false);
   const [side, setSide] = useState("works");
-  const a = artworkById(g.catalog.active);
+  const activePlacement = placementById(g.catalog.active);
+  const activeHall = activePlacement
+    ? hallById(activePlacement.hallId)
+    : g.currentHall;
+  const nearbyPlacement = placementById(g.catalog.nearby);
   return (
     <div className="app">
       <header>
@@ -82,9 +92,9 @@ export default function App() {
               一场不受边界限制的艺术漫游。
             </p>
             <div className="exhibition-meta">
-              <span>6 件作品</span>
-              <span>6 位艺术家</span>
-              <span>约 12 分钟</span>
+              <span>{artworks.length} 件作品</span>
+              <span>{halls.length} 个展厅 · 3 层</span>
+              <span>约 18 分钟</span>
             </div>
           </div>
           <div className="sidebar-tabs">
@@ -92,7 +102,7 @@ export default function App() {
               className={side === "works" ? "active" : ""}
               onClick={() => setSide("works")}
             >
-              展出作品 <small>06</small>
+              展出作品 <small>{String(artworks.length).padStart(2, "0")}</small>
             </button>
             <button
               className={side === "map" ? "active" : ""}
@@ -102,22 +112,27 @@ export default function App() {
             </button>
           </div>
           {side === "works" ? (
-            <ArtworkList active={g.catalog.active} onSelect={g.go} />
+            <ArtworkList
+              active={g.catalog.active}
+              currentHallId={g.currentHall?.id ?? null}
+              onSelect={g.go}
+            />
           ) : (
             <Map
               position={g.walker.position}
-              active={g.catalog.active}
+              activePlacement={g.catalog.active}
               onSelect={g.go}
               large
             />
           )}
           <TourPanel
             state={g.tour.state}
-            onStart={g.tour.start}
+            onStart={g.startTour}
             onPause={g.pauseTour}
-            onResume={g.tour.resume}
+            onResume={g.resumeTour}
             onStop={g.stopTour}
             onNext={g.nextTour}
+            onRetry={g.retryTour}
           />
           <div className="sidebar-footer">
             <Compass size={15} />
@@ -129,7 +144,12 @@ export default function App() {
             <div>
               <span className="eyebrow">THE VIRTUAL GALLERY</span>
               <h2>
-                步入一场艺术的漫游<span>01 / 主展厅</span>
+                步入一场艺术的漫游
+                <span>
+                  {g.currentHall
+                    ? `${g.currentHall.floor} / ${g.currentHall.name}`
+                    : "穿行于展厅之间"}
+                </span>
               </h2>
             </div>
             <button className="text-button" onClick={() => setHelp(true)}>
@@ -141,7 +161,10 @@ export default function App() {
             <Viewport
               position={g.walker.positionRef}
               yaw={g.walker.yaw}
+              elevation={g.walker.elevationRef}
+              hallId={g.walker.hallId}
               onSelect={g.go}
+              onLook={g.pauseForLook}
             />
             <div className="scene-top">
               <span>
@@ -164,11 +187,23 @@ export default function App() {
             <div className="center-cross">+</div>
             <div className="scene-location">
               <MapPin size={15} />
-              {g.catalog.nearby ? a?.title : "万物之间 · 主展厅"}
+              {nearbyPlacement
+                ? artworkById(nearbyPlacement.artworkId)?.title
+                : g.currentHall
+                  ? `${g.currentHall.name} · ${g.currentHall.floorLabel}`
+                  : g.currentCorridor
+                    ? `穿过 ${g.currentCorridor.name}`
+                    : "展厅之间"}
               <small>
-                {g.catalog.nearby
-                  ? "靠近作品 · 可收听讲解"
-                  : "拖动视角，发现你的下一次共鸣"}
+                {nearbyPlacement
+                  ? `${activeHall?.name} · ${nearbyPlacement.label} · 可收听讲解`
+                  : g.currentCorridor
+                    ? g.currentCorridor.closed
+                      ? g.currentCorridor.note || "通道暂时关闭"
+                      : "继续向前，便会抵达另一个展厅"
+                    : g.tour.state.phase === "blocked"
+                      ? g.tour.state.note
+                      : "WASD 行走 · 穿过门户可前往其他展厅"}
               </small>
             </div>
             <div
@@ -184,7 +219,7 @@ export default function App() {
               <span>空间导航 ↗</span>
               <Map
                 position={g.walker.position}
-                active={g.catalog.active}
+                activePlacement={g.catalog.active}
                 onSelect={g.go}
               />
             </div>
@@ -252,27 +287,31 @@ export default function App() {
               </div>
               <TourPanel
                 state={g.tour.state}
-                onStart={g.tour.start}
+                onStart={g.startTour}
                 onPause={g.pauseTour}
-                onResume={g.tour.resume}
+                onResume={g.resumeTour}
                 onStop={g.stopTour}
                 onNext={g.nextTour}
+                onRetry={g.retryTour}
               />
             </>
           ) : (
             <ArtworkDetail
-              id={g.catalog.active}
-              saved={g.collection.document.favorites.includes(
-                g.catalog.active || "",
-              )}
+              placementId={g.catalog.active}
+              saved={
+                !!activePlacement &&
+                g.collection.document.favorites.includes(activePlacement.artworkId)
+              }
               onFavorite={() => {
-                if (g.catalog.active) g.collection.toggle(g.catalog.active);
+                if (activePlacement?.artworkId)
+                  g.collection.toggle(activePlacement.artworkId);
               }}
               onListen={() => {
-                if (g.catalog.active) g.narration.play(g.catalog.active);
+                if (activePlacement?.artworkId)
+                  g.narration.play(activePlacement.artworkId);
               }}
               onGo={() => {
-                if (g.catalog.active) g.go(g.catalog.active);
+                if (activePlacement) g.go(activePlacement.id);
               }}
             />
           )}
@@ -287,6 +326,15 @@ export default function App() {
           </div>
         </aside>
       </main>
+      {g.notice && (
+        <div className="scene-notice" role="status">
+          <Info size={15} />
+          <span>{g.notice}</span>
+          <button onClick={g.dismissNotice} aria-label="关闭提示">
+            <X size={14} />
+          </button>
+        </div>
+      )}
       {g.collection.storageError && (
         <div className="storage-error">
           浏览器存储已满，本次更改暂未保存，请下载回顾。
@@ -329,21 +377,26 @@ export default function App() {
             <h2>{help ? "按照自己的节奏，探索。" : "你在这里。"}</h2>
             {help ? (
               <>
-                <p>使用 W / A / S / D 或方向键自由行走；拖动画面转动视角。</p>
                 <p>
-                  点击画中的作品或左侧列表，自动前往。靠近作品后，右侧切换介绍。
+                  使用 W / A / S / D 或方向键自由行走；拖动画面转动视角。四个展厅由门廊相连，穿过门廊可以继续走向其他楼层，镜头不会跳切。
                 </p>
                 <p>
-                  主题导览会带你依次前往作品并开始讲解。收藏喜欢的作品，在“我的收藏”写下感想并下载参观回顾。
+                  点击画中的作品或左侧列表自动前往；同一件作品若在不同展厅陈列，列表会分别标出各自的陈列位置。
                 </p>
                 <p>
-                  讲解由设备的中文语音合成播放；没有中文语音时仍可阅读同步字幕。
+                  主题导览按“陈列”逐站前往并开始讲解。行走途中拖动画面对话或按下方向键，导览会暂停；面板里也可以随时改走另一条路线。
+                </p>
+                <p>
+                  门户可能形成环路，也可能暂时关闭。若目的陈列无法抵达，你会留在原地并看到原因，只有真正走进的展厅才会计入参观回顾。
+                </p>
+                <p>
+                  收藏与感想属于作品本身，讲解也随作品播放；参观回顾会记录你在哪些展厅看过它。讲解由设备的中文语音合成播放，没有中文语音时仍可阅读同步字幕。
                 </p>
               </>
             ) : (
               <Map
                 position={g.walker.position}
-                active={g.catalog.active}
+                activePlacement={g.catalog.active}
                 onSelect={(id) => {
                   g.go(id);
                   setMapOpen(false);

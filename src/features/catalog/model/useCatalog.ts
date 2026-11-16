@@ -1,17 +1,27 @@
 import { useState } from "react";
+import { placementById } from "../../../shared/catalog";
 import type { Point } from "../../../shared/types";
-import { nearbyArtwork } from "../lib/proximity";
+import { nearbyPlacement } from "../lib/proximity";
+
 export function useCatalog() {
-  const [active, setActive] = useState<string | null>("a1");
+  /**
+   * `active` is a placement (a hanging), not an artwork: the same work in
+   * two halls is two distinct viewing contexts. Details, favourites and
+   * notes resolve through placement → artwork.
+   */
+  const [active, setActive] = useState<string | null>("pa1-main");
   const [nearby, setNearby] = useState<string | null>(null);
   return {
     active,
     nearby,
     select: setActive,
     observe: (p: Point) => {
-      const id = nearbyArtwork(p);
-      setNearby(id);
-      if (id) setActive(id);
+      const found = nearbyPlacement(p);
+      setNearby(found?.placementId ?? null);
+      if (found) setActive(found.placementId);
     },
+    /** Clear the nearby highlight without changing the open detail. */
+    reset: () => setNearby(null),
+    activeArtworkId: placementById(active)?.artworkId ?? null,
   };
 }

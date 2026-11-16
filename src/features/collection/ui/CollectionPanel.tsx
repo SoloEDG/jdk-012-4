@@ -1,6 +1,6 @@
-import { Heart, Download, ArrowUpRight } from "lucide-react";
+import { Heart, Download, ArrowUpRight, MapPin } from "lucide-react";
 import type { GalleryDocument } from "../../../shared/types";
-import { artworkById } from "../../../shared/catalog";
+import { artworkById, hallById } from "../../../shared/catalog";
 import { recapStats, createRecap } from "../lib/recap";
 import { downloadRecap } from "../lib/download";
 export function CollectionPanel({
@@ -10,11 +10,15 @@ export function CollectionPanel({
   onToggle,
 }: {
   document: GalleryDocument;
-  onSelect: (id: string) => void;
-  onNote: (id: string, text: string) => void;
-  onToggle: (id: string) => void;
+  /** Favourites point at artworks; choosing one walks to its nearest hanging. */
+  onSelect: (artworkId: string) => void;
+  onNote: (artworkId: string, text: string) => void;
+  onToggle: (artworkId: string) => void;
 }) {
   const stats = recapStats(document);
+  const halls = document.halls
+    .map((h) => hallById(h.hallId))
+    .filter((h): h is NonNullable<typeof h> => !!h);
   return (
     <div className="collection-panel">
       <div className="eyebrow">YOUR PERSONAL GALLERY</div>
@@ -30,6 +34,12 @@ export function CollectionPanel({
           <strong>{Math.floor(stats.seconds / 60)}′</strong>停留时长
         </span>
       </div>
+      <p className="visited-halls">
+        <MapPin size={12} />
+        {halls.length
+          ? `已到访 ${halls.length} 个展厅：${halls.map((h) => h.name).join("、")}`
+          : "还没有进入任何展厅。走进展厅后，才会记入回顾。"}
+      </p>
       {document.favorites.length === 0 ? (
         <div className="empty">
           <Heart size={28} />
@@ -37,26 +47,33 @@ export function CollectionPanel({
           <small>你的参观故事，将从这里开始。</small>
         </div>
       ) : (
-        document.favorites.map((id) => {
-          const a = artworkById(id);
+        document.favorites.map((artworkId) => {
+          const a = artworkById(artworkId);
           if (!a) return null;
+          const visit = document.visits.find((v) => v.id === artworkId);
+          const places = (visit?.halls || [])
+            .map((id) => hallById(id))
+            .filter((h): h is NonNullable<typeof h> => !!h);
           return (
-            <article className="saved-card" key={id}>
-              <button className="saved-title" onClick={() => onSelect(id)}>
+            <article className="saved-card" key={artworkId}>
+              <button className="saved-title" onClick={() => onSelect(artworkId)}>
                 {a.title}
                 <ArrowUpRight size={15} />
               </button>
               <small>
                 {a.artist} · {a.year}
+                {places.length
+                  ? ` · ${places.map((h) => h.name).join(" / ")}`
+                  : ""}
               </small>
               <textarea
                 aria-label={"感想-" + a.title}
                 placeholder="写下此刻的感受…"
-                value={document.notes[id] || ""}
-                onChange={(e) => onNote(id, e.target.value)}
+                value={document.notes[artworkId] || ""}
+                onChange={(e) => onNote(artworkId, e.target.value)}
                 maxLength={1000}
               />
-              <button className="text-button" onClick={() => onToggle(id)}>
+              <button className="text-button" onClick={() => onToggle(artworkId)}>
                 移出收藏
               </button>
             </article>

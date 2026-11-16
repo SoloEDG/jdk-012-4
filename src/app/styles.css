@@ -1126,3 +1126,248 @@ textarea {
     margin: 3px 0;
   }
 }
+
+/* ---- Multi-hall additions ---- */
+.map-board {
+  position: relative;
+}
+.map-board .map {
+  border: 1px solid #3a4335;
+  background: #e7e3d7;
+}
+.map-board.large .map {
+  border-color: #596349;
+  background: #e6e2d7;
+}
+.map-legend {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 8px;
+  color: #9aa488;
+  padding-top: 6px;
+  flex-wrap: wrap;
+}
+.map-legend .legend-line,
+.map-legend .legend-closed {
+  width: 14px;
+  height: 3px;
+  display: inline-block;
+  border-radius: 2px;
+}
+.map-legend .legend-line {
+  background: #a99c78;
+}
+.map-legend .legend-closed {
+  background: repeating-linear-gradient(90deg, #8f4634 0 3px, transparent 3px 5px);
+}
+.map-floors {
+  margin-left: auto;
+  color: #7b8570;
+}
+.map-hall-label {
+  font-family: "Noto Serif SC", serif;
+  pointer-events: none;
+}
+.map-artwork {
+  cursor: pointer;
+}
+.map-artwork:hover circle {
+  fill: #c5a66d;
+}
+.hall-list-group + .hall-list-group {
+  margin-top: 6px;
+  border-top: 1px solid #313a2d;
+  padding-top: 8px;
+}
+.hall-list-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 8px 7px 4px;
+  font-size: 9px;
+  letter-spacing: 0.6px;
+  color: #b9bda2;
+}
+.hall-list-heading small {
+  font-size: 7px;
+  letter-spacing: 1px;
+  color: #6f7b64;
+}
+.art-row.elsewhere {
+  opacity: 0.55;
+}
+.art-row.elsewhere:hover {
+  opacity: 0.9;
+}
+.placement-badge {
+  position: absolute;
+  z-index: 1;
+  right: 10px;
+  bottom: 11px;
+  font-size: 8px;
+  font-style: normal;
+  letter-spacing: 0.4px;
+  padding: 3px 6px;
+  background: #1e271dd9;
+  color: #d9d3bd;
+  max-width: 70%;
+  text-align: right;
+}
+.placement-line {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 9px;
+  color: #9fa98b;
+  margin: 14px 0 0;
+  border-left: 1px solid #4a573c;
+  padding-left: 9px;
+}
+.sibling-note {
+  font-size: 9px;
+  line-height: 1.9;
+  color: #7f8b72;
+  border-top: 1px dashed #3d4934;
+  padding-top: 10px;
+  margin-top: 4px;
+}
+.visited-halls {
+  display: flex;
+  gap: 6px;
+  align-items: flex-start;
+  font-size: 9px;
+  line-height: 1.8;
+  color: #93a081;
+  padding: 12px 0 4px;
+  margin: 0;
+}
+.visited-halls svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.current-tour.phase-blocked {
+  background: #3a2f24;
+  border-left: 2px solid #b08050;
+}
+.current-tour.phase-blocked .tour-status {
+  color: #e0c39c;
+}
+.tour-stop-meta {
+  font-size: 9px;
+  color: #8b987b;
+  margin: 0 0 12px;
+  letter-spacing: 0.3px;
+}
+.tour-blocked-note {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  font-size: 9px;
+  line-height: 1.8;
+  color: #d3b98f;
+  background: #2b2a22;
+  padding: 9px 10px;
+  margin-bottom: 12px;
+}
+.tour-blocked-note svg {
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+.tour-controls button {
+  min-width: 0;
+}
+.scene-location small {
+  max-width: 320px;
+  white-space: normal;
+}
+@media (max-width: 850px) {
+  .scene-location small {
+    max-width: 200px;
+  }
+  .placement-badge {
+    font-size: 7px;
+  }
+}
+
+.scene-notice {
+  position: fixed;
+  left: 50%;
+  bottom: 116px;
+  transform: translateX(-50%);
+  z-index: 18;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: min(620px, 92vw);
+  background: #2c2a21f2;
+  border: 1px solid #6d6144;
+  color: #e4d3ae;
+  font-size: 11px;
+  line-height: 1.7;
+  padding: 12px 14px;
+  box-shadow: 0 10px 30px #0006;
+}
+.scene-notice svg {
+  flex-shrink: 0;
+}
+.scene-notice span {
+  flex: 1;
+}
+.scene-notice button {
+  flex-shrink: 0;
+  color: #b8a984;
+  display: grid;
+  place-items: center;
+}
+@media (max-width: 560px) {
+  .scene-notice {
+    bottom: 92px;
+    font-size: 10px;
+  }
+}
+
+.tour-switch {
+  margin-top: 12px;
+  border-top: 1px solid #435038;
+  padding-top: 10px;
+}
+.tour-switch summary {
+  cursor: pointer;
+  font-size: 9px;
+  letter-spacing: 0.4px;
+  color: #a9b494;
+  list-style: none;
+}
+.tour-switch summary::-webkit-details-marker {
+  display: none;
+}
+.tour-switch summary::before {
+  content: "↻ ";
+  color: #c3b380;
+}
+.tour-switch-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 9px;
+}
+.tour-switch-list button {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+  text-align: left;
+  font-size: 10px;
+  color: #cfceb2;
+  border: 1px solid #48553a;
+  padding: 8px 9px;
+}
+.tour-switch-list button:hover {
+  background: #323d2c;
+}
+.tour-switch-list button span {
+  font-size: 8px;
+  color: #8b987b;
+  white-space: nowrap;
+}
